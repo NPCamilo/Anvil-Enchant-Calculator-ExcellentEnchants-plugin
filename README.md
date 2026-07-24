@@ -2,8 +2,6 @@
 
 Calcula el orden óptimo de encantamientos para minimizar el costo de XP en el yunque de Minecraft.
 
-## 🔗 [Usar计算器 →](https://TU-USUARIO.github.io/minecraft-anvil-calculator/)
-
 ## Características
 
 - **Algoritmo de fuerza bruta** que prueba todas las combinaciones posibles de merge para encontrar el camino más barato (inspirado en [iamcal.github.io/enchant-order](https://iamcal.github.io/enchant-order/))
