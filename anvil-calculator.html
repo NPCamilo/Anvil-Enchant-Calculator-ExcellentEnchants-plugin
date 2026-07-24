@@ -1,0 +1,4277 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minecraft Anvil Enchantment Calculator</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-dark: #0d0d0d;
+        --bg-panel: #1a1a2e;
+        --bg-card: #16213e;
+        --bg-card-hover: #1a2744;
+        --accent-orange: #ff6b35;
+        --accent-orange-dim: #cc5528;
+        --accent-green: #80ff20;
+        --accent-yellow: #ffd700;
+        --text-primary: #e8e8e8;
+        --text-secondary: #a0a0b0;
+        --text-dim: #606070;
+        --border-color: #2a2a3e;
+        --border-glow: rgba(255, 107, 53, 0.3);
+        --shadow-orange: 0 0 20px rgba(255, 107, 53, 0.15);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Animated background */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            ellipse at 20% 50%,
+            rgba(255, 107, 53, 0.03) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 80% 20%,
+            rgba(128, 255, 32, 0.02) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 25px;
+        background: linear-gradient(135deg, var(--bg-panel), var(--bg-card));
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--accent-orange),
+          transparent
+        );
+      }
+
+      .header h1 {
+        font-family: "Press Start 2P", cursive;
+        font-size: 18px;
+        color: var(--accent-orange);
+        margin-bottom: 8px;
+        text-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+        letter-spacing: 1px;
+      }
+
+      .header .subtitle {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      .mode-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 15px;
+      }
+
+      .mode-btn {
+        font-family: "Inter", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 8px 18px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-dark);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .mode-btn.active {
+        background: var(--accent-orange);
+        color: #fff;
+        border-color: var(--accent-orange);
+        box-shadow: 0 0 12px rgba(255, 107, 53, 0.3);
+      }
+
+      .mode-btn:hover:not(.active) {
+        border-color: var(--accent-orange);
+        color: var(--text-primary);
+      }
+
+      /* Main layout */
+      .main-layout {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      @media (max-width: 900px) {
+        .main-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Panels */
+      .panel {
+        background: linear-gradient(135deg, var(--bg-panel), var(--bg-card));
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+      }
+
+      .panel-title {
+        font-family: "Press Start 2P", cursive;
+        font-size: 11px;
+        color: var(--accent-orange);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-title .icon {
+        font-size: 16px;
+      }
+
+      /* Item selector */
+      .item-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-bottom: 15px;
+      }
+
+      .item-btn {
+        font-family: "Inter", sans-serif;
+        font-size: 11px;
+        padding: 8px 4px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-dark);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .item-btn.active {
+        background: rgba(255, 107, 53, 0.15);
+        color: var(--accent-orange);
+        border-color: var(--accent-orange);
+      }
+
+      .item-btn:hover:not(.active) {
+        border-color: var(--accent-orange);
+        color: var(--text-primary);
+      }
+
+      .item-btn .emoji {
+        font-size: 14px;
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      /* Category tabs */
+      .category-tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .cat-tab {
+        font-family: "Inter", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .cat-tab.active {
+        background: rgba(255, 107, 53, 0.1);
+        color: var(--accent-orange);
+        border-color: var(--accent-orange-dim);
+      }
+
+      .cat-tab:hover:not(.active) {
+        color: var(--text-secondary);
+      }
+
+      /* Enchantment list */
+      .enchant-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 5px;
+      }
+
+      .enchant-list::-webkit-scrollbar {
+        width: 6px;
+      }
+      .enchant-list::-webkit-scrollbar-track {
+        background: var(--bg-dark);
+        border-radius: 3px;
+      }
+      .enchant-list::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+      }
+      .enchant-list::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-orange-dim);
+      }
+
+      .enchant-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        transition: all 0.15s;
+        cursor: pointer;
+      }
+
+      .enchant-row:hover {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--border-color);
+      }
+
+      .enchant-row.selected {
+        background: rgba(255, 107, 53, 0.1);
+        border-color: var(--accent-orange-dim);
+      }
+
+      .enchant-check {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--border-color);
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.15s;
+        font-size: 11px;
+        color: transparent;
+      }
+
+      .enchant-row.selected .enchant-check {
+        background: var(--accent-orange);
+        border-color: var(--accent-orange);
+        color: #fff;
+      }
+
+      .enchant-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .enchant-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .enchant-meta {
+        font-size: 10px;
+        color: var(--text-dim);
+        display: flex;
+        gap: 8px;
+        margin-top: 1px;
+      }
+
+      .enchant-meta .cost {
+        color: var(--accent-yellow);
+      }
+      .enchant-meta .rarity-common {
+        color: #aaa;
+      }
+      .enchant-meta .rarity-uncommon {
+        color: #55ff55;
+      }
+      .enchant-meta .rarity-rare {
+        color: #5555ff;
+      }
+      .enchant-meta .rarity-epic {
+        color: #ff55ff;
+      }
+
+      .level-selector {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+
+      .level-btn {
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        background: var(--bg-dark);
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+
+      .level-btn:hover {
+        border-color: var(--accent-orange);
+        color: var(--accent-orange);
+      }
+
+      .level-display {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent-green);
+        min-width: 20px;
+        text-align: center;
+      }
+
+      /* ee tag */
+      .ee-tag {
+        font-size: 8px;
+        font-weight: 700;
+        padding: 1px 4px;
+        border-radius: 3px;
+        background: rgba(128, 0, 255, 0.2);
+        color: #aa77ff;
+        border: 1px solid rgba(128, 0, 255, 0.3);
+        flex-shrink: 0;
+      }
+
+      /* Selected enchantments summary */
+      .selected-summary {
+        margin-top: 12px;
+        padding: 10px;
+        background: var(--bg-dark);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+      }
+
+      .selected-summary h3 {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+      }
+
+      .selected-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .selected-tag {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 4px;
+        background: rgba(255, 107, 53, 0.15);
+        color: var(--accent-orange);
+        border: 1px solid rgba(255, 107, 53, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .selected-tag:hover {
+        background: rgba(255, 107, 53, 0.25);
+      }
+      .selected-tag .remove {
+        font-size: 12px;
+        opacity: 0.6;
+      }
+      .selected-tag:hover .remove {
+        opacity: 1;
+      }
+
+      /* Calculate button */
+      .calc-btn {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px;
+        font-family: "Press Start 2P", cursive;
+        font-size: 11px;
+        border: 2px solid var(--accent-orange);
+        border-radius: 8px;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 107, 53, 0.15),
+          rgba(255, 107, 53, 0.05)
+        );
+        color: var(--accent-orange);
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .calc-btn:hover {
+        background: var(--accent-orange);
+        color: #fff;
+        box-shadow: var(--shadow-orange);
+        transform: translateY(-1px);
+      }
+
+      .calc-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Results panel */
+      .results-placeholder {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-dim);
+      }
+
+      .results-placeholder .big-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        opacity: 0.3;
+      }
+
+      .results-placeholder p {
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      /* Stats bar */
+      .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .stat-card {
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+      }
+
+      .stat-label {
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+
+      .stat-value {
+        font-family: "Press Start 2P", cursive;
+        font-size: 16px;
+        color: var(--accent-green);
+      }
+
+      .stat-value.warning {
+        color: var(--accent-yellow);
+      }
+      .stat-value.danger {
+        color: #ff4444;
+      }
+
+      .stat-sub {
+        font-size: 10px;
+        color: var(--text-dim);
+        margin-top: 3px;
+      }
+
+      /* Merge steps */
+      .merge-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .step-card {
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 14px;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .step-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent-orange);
+      }
+
+      .step-card.final::before {
+        background: var(--accent-green);
+      }
+      .step-card.warning {
+        border-color: rgba(255, 215, 0, 0.3);
+      }
+      .step-card.warning::before {
+        background: var(--accent-yellow);
+      }
+      .step-card.danger {
+        border-color: rgba(255, 68, 68, 0.3);
+      }
+      .step-card.danger::before {
+        background: #ff4444;
+      }
+
+      .step-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .step-number {
+        font-family: "Press Start 2P", cursive;
+        font-size: 9px;
+        color: var(--accent-orange);
+        background: rgba(255, 107, 53, 0.1);
+        padding: 3px 8px;
+        border-radius: 4px;
+      }
+
+      .step-cost {
+        font-family: "Press Start 2P", cursive;
+        font-size: 11px;
+        color: var(--accent-yellow);
+      }
+
+      .step-cost.over-limit {
+        color: #ff4444;
+      }
+
+      .step-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .step-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 5px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .step-item.target {
+        border-color: var(--accent-green);
+        color: var(--accent-green);
+      }
+      .step-item.sacrifice {
+        border-color: var(--accent-orange);
+        color: var(--accent-orange);
+      }
+      .step-item.result {
+        border-color: var(--accent-yellow);
+        color: var(--accent-yellow);
+      }
+
+      .step-arrow {
+        color: var(--text-dim);
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+
+      .step-details {
+        margin-top: 6px;
+        font-size: 10px;
+        color: var(--text-dim);
+        line-height: 1.5;
+      }
+
+      .step-details .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1px 0;
+      }
+
+      .step-details .detail-cost {
+        color: var(--accent-yellow);
+      }
+      .step-details .detail-penalty {
+        color: #ff8866;
+      }
+
+      /* Final item preview */
+      .final-preview {
+        margin-top: 15px;
+        padding: 15px;
+        background: linear-gradient(
+          135deg,
+          rgba(128, 255, 32, 0.05),
+          rgba(128, 255, 32, 0.02)
+        );
+        border: 1px solid rgba(128, 255, 32, 0.2);
+        border-radius: 8px;
+      }
+
+      .final-preview h3 {
+        font-family: "Press Start 2P", cursive;
+        font-size: 10px;
+        color: var(--accent-green);
+        margin-bottom: 10px;
+      }
+
+      .final-enchant-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .final-enchant-tag {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 4px;
+        background: rgba(128, 255, 32, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(128, 255, 32, 0.2);
+      }
+
+      .final-enchant-tag.vanilla {
+        background: rgba(128, 255, 32, 0.1);
+        color: var(--accent-green);
+      }
+      .final-enchant-tag.ee {
+        background: rgba(128, 0, 255, 0.1);
+        color: #aa77ff;
+        border-color: rgba(128, 0, 255, 0.2);
+      }
+
+      /* Presets */
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .preset-btn {
+        font-family: "Inter", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .preset-btn:hover {
+        border-color: var(--accent-green);
+        color: var(--accent-green);
+      }
+
+      /* Conflicts notice */
+      .conflicts-notice {
+        margin-top: 8px;
+        padding: 8px 10px;
+        background: rgba(255, 68, 68, 0.08);
+        border: 1px solid rgba(255, 68, 68, 0.2);
+        border-radius: 6px;
+        font-size: 11px;
+        color: #ff8888;
+        display: none;
+      }
+
+      .conflicts-notice.visible {
+        display: block;
+      }
+
+      /* Responsive */
+      @media (max-width: 600px) {
+        .container {
+          padding: 10px;
+        }
+        .header h1 {
+          font-size: 12px;
+        }
+        .item-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .stats-bar {
+          grid-template-columns: 1fr;
+        }
+        .step-content {
+          flex-wrap: wrap;
+        }
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .step-card {
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .loading {
+        animation: pulse 1s infinite;
+      }
+
+      /* Search box */
+      .search-box {
+        width: 100%;
+        padding: 8px 12px;
+        font-family: "Inter", sans-serif;
+        font-size: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .search-box:focus {
+        border-color: var(--accent-orange);
+      }
+      .search-box::placeholder {
+        color: var(--text-dim);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <h1>⚒ ANVIL ENCHANT CALCULATOR</h1>
+        <div class="subtitle">
+          Calcula el orden óptimo de encantamientos para minimizar el costo de
+          XP en el yunque
+        </div>
+        <div class="mode-toggle">
+          <button
+            class="mode-btn active"
+            data-mode="vanilla"
+            onclick="setMode('vanilla')"
+          >
+            Vanilla
+          </button>
+          <button class="mode-btn" data-mode="ee" onclick="setMode('ee')">
+            Vanilla + ExcellentEnchants
+          </button>
+        </div>
+      </div>
+
+      <!-- Main -->
+      <div class="main-layout">
+        <!-- Left Panel: Selection -->
+        <div class="panel" id="selection-panel">
+          <div class="panel-title">
+            <span class="icon">⛏</span> SELECCIONAR OBJETO
+          </div>
+
+          <!-- Item category tabs -->
+          <div class="category-tabs" id="item-cat-tabs"></div>
+
+          <!-- Item grid -->
+          <div class="item-grid" id="item-grid"></div>
+
+          <div class="panel-title" style="margin-top: 15px">
+            <span class="icon">📜</span> ENCANTAMIENTOS
+          </div>
+
+          <!-- Presets -->
+          <div class="presets" id="presets"></div>
+
+          <!-- Search -->
+          <input
+            type="text"
+            class="search-box"
+            id="enchant-search"
+            placeholder="Buscar encantamiento..."
+            oninput="filterEnchants()"
+          />
+
+          <!-- Enchantment list -->
+          <div
+            id="enchant-instruction"
+            style="
+              font-size: 11px;
+              color: var(--text-dim);
+              margin-bottom: 8px;
+              padding: 6px 10px;
+              background: rgba(255, 107, 53, 0.05);
+              border-radius: 4px;
+              border: 1px dashed var(--border-color);
+            "
+          >
+            Haz clic en un encantamiento para añadirlo. Usa
+            <span style="color: var(--accent-orange)">+/−</span> para cambiar el
+            nivel.
+          </div>
+          <div class="enchant-list" id="enchant-list"></div>
+
+          <!-- Conflicts -->
+          <div class="conflicts-notice" id="conflicts-notice"></div>
+
+          <!-- Selected summary -->
+          <div class="selected-summary">
+            <h3>
+              ENCANTAMIENTOS SELECCIONADOS (<span id="sel-count">0</span>)
+            </h3>
+            <div class="selected-tags" id="selected-tags">
+              <span style="font-size: 11px; color: var(--text-dim)"
+                >Ninguno seleccionado</span
+              >
+            </div>
+          </div>
+
+          <!-- Calculate -->
+          <button class="calc-btn" onclick="calculate()">
+            CALCULAR ORDEN ÓPTIMO
+          </button>
+        </div>
+
+        <!-- Right Panel: Results -->
+        <div class="panel" id="results-panel">
+          <div class="panel-title"><span class="icon">📋</span> RESULTADO</div>
+          <div id="results-content">
+            <div class="results-placeholder">
+              <div class="big-icon">⚒</div>
+              <p>
+                Selecciona un objeto y los encantamientos deseados,<br />luego
+                haz clic en <strong>Calcular</strong> para ver el orden óptimo.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════════════
+      // DATA
+      // ═══════════════════════════════════════════════
+
+      const VANILLA_ENCHANTMENTS = {
+        sword: [
+          {
+            id: "sharpness",
+            name: "Sharpness",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: ["smite", "bane_arthropods"],
+          },
+          {
+            id: "smite",
+            name: "Smite",
+            maxLv: 5,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["sharpness", "bane_arthropods"],
+          },
+          {
+            id: "bane_arthropods",
+            name: "Bane of Arthropods",
+            maxLv: 5,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["sharpness", "smite"],
+          },
+          {
+            id: "knockback",
+            name: "Knockback",
+            maxLv: 2,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "fire_aspect",
+            name: "Fire Aspect",
+            maxLv: 2,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "looting",
+            name: "Looting",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "sweeping",
+            name: "Sweeping Edge",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        axe: [
+          {
+            id: "sharpness",
+            name: "Sharpness",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: ["smite", "bane_arthropods"],
+          },
+          {
+            id: "smite",
+            name: "Smite",
+            maxLv: 5,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["sharpness", "bane_arthropods"],
+          },
+          {
+            id: "bane_arthropods",
+            name: "Bane of Arthropods",
+            maxLv: 5,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["sharpness", "smite"],
+          },
+          {
+            id: "efficiency",
+            name: "Efficiency",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "fortune",
+            name: "Fortune",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["silk_touch"],
+          },
+          {
+            id: "silk_touch",
+            name: "Silk Touch",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: ["fortune"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        pickaxe: [
+          {
+            id: "efficiency",
+            name: "Efficiency",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "fortune",
+            name: "Fortune",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["silk_touch"],
+          },
+          {
+            id: "silk_touch",
+            name: "Silk Touch",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: ["fortune"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        shovel: [
+          {
+            id: "efficiency",
+            name: "Efficiency",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "fortune",
+            name: "Fortune",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["silk_touch"],
+          },
+          {
+            id: "silk_touch",
+            name: "Silk Touch",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: ["fortune"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        hoe: [
+          {
+            id: "efficiency",
+            name: "Efficiency",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "fortune",
+            name: "Fortune",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["silk_touch"],
+          },
+          {
+            id: "silk_touch",
+            name: "Silk Touch",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: ["fortune"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        helmet: [
+          {
+            id: "protection",
+            name: "Protection",
+            maxLv: 4,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [
+              "fire_protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "fire_protection",
+            name: "Fire Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [
+              "protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "blast_protection",
+            name: "Blast Protection",
+            maxLv: 4,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [
+              "protection",
+              "fire_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "projectile_protection",
+            name: "Projectile Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["protection", "fire_protection", "blast_protection"],
+          },
+          {
+            id: "respiration",
+            name: "Respiration",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "aqua_affinity",
+            name: "Aqua Affinity",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "thorns",
+            name: "Thorns",
+            maxLv: 3,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_binding",
+            name: "Curse of Binding",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        chestplate: [
+          {
+            id: "protection",
+            name: "Protection",
+            maxLv: 4,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [
+              "fire_protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "fire_protection",
+            name: "Fire Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [
+              "protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "blast_protection",
+            name: "Blast Protection",
+            maxLv: 4,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [
+              "protection",
+              "fire_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "projectile_protection",
+            name: "Projectile Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["protection", "fire_protection", "blast_protection"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "thorns",
+            name: "Thorns",
+            maxLv: 3,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_binding",
+            name: "Curse of Binding",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        leggings: [
+          {
+            id: "protection",
+            name: "Protection",
+            maxLv: 4,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [
+              "fire_protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "fire_protection",
+            name: "Fire Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [
+              "protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "blast_protection",
+            name: "Blast Protection",
+            maxLv: 4,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [
+              "protection",
+              "fire_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "projectile_protection",
+            name: "Projectile Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["protection", "fire_protection", "blast_protection"],
+          },
+          {
+            id: "swift_sneak",
+            name: "Swift Sneak",
+            maxLv: 3,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "thorns",
+            name: "Thorns",
+            maxLv: 3,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_binding",
+            name: "Curse of Binding",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        boots: [
+          {
+            id: "protection",
+            name: "Protection",
+            maxLv: 4,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [
+              "fire_protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "fire_protection",
+            name: "Fire Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [
+              "protection",
+              "blast_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "blast_protection",
+            name: "Blast Protection",
+            maxLv: 4,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [
+              "protection",
+              "fire_protection",
+              "projectile_protection",
+            ],
+          },
+          {
+            id: "projectile_protection",
+            name: "Projectile Protection",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["protection", "fire_protection", "blast_protection"],
+          },
+          {
+            id: "feather_falling",
+            name: "Feather Falling",
+            maxLv: 4,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "depth_strider",
+            name: "Depth Strider",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["frost_walker"],
+          },
+          {
+            id: "frost_walker",
+            name: "Frost Walker",
+            maxLv: 2,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["depth_strider"],
+          },
+          {
+            id: "soul_speed",
+            name: "Soul Speed",
+            maxLv: 3,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "thorns",
+            name: "Thorns",
+            maxLv: 3,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_binding",
+            name: "Curse of Binding",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        bow: [
+          {
+            id: "power",
+            name: "Power",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "punch",
+            name: "Punch",
+            maxLv: 2,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "flame",
+            name: "Flame",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "infinity",
+            name: "Infinity",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: ["mending"],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["infinity"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        crossbow: [
+          {
+            id: "quick_charge",
+            name: "Quick Charge",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "piercing",
+            name: "Piercing",
+            maxLv: 4,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: ["multishot"],
+          },
+          {
+            id: "multishot",
+            name: "Multishot",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["piercing"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        trident: [
+          {
+            id: "loyalty",
+            name: "Loyalty",
+            maxLv: 3,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: ["riptide"],
+          },
+          {
+            id: "channeling",
+            name: "Channeling",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: ["riptide"],
+          },
+          {
+            id: "riptide",
+            name: "Riptide",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["loyalty", "channeling"],
+          },
+          {
+            id: "impaling",
+            name: "Impaling",
+            maxLv: 5,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        mace: [
+          {
+            id: "density",
+            name: "Density",
+            maxLv: 5,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["breach", "smite", "bane_arthropods"],
+          },
+          {
+            id: "breach",
+            name: "Breach",
+            maxLv: 4,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: ["density", "smite", "bane_arthropods"],
+          },
+          {
+            id: "wind_burst",
+            name: "Wind Burst",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "smite",
+            name: "Smite",
+            maxLv: 5,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["density", "breach", "bane_arthropods"],
+          },
+          {
+            id: "bane_arthropods",
+            name: "Bane of Arthropods",
+            maxLv: 5,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: ["density", "breach", "smite"],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        fishing_rod: [
+          {
+            id: "luck_sea",
+            name: "Luck of the Sea",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "lure",
+            name: "Lure",
+            maxLv: 3,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        shield: [
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+        shears: [
+          {
+            id: "efficiency",
+            name: "Efficiency",
+            maxLv: 5,
+            mulItem: 1,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+        ],
+        elytra: [
+          {
+            id: "unbreaking",
+            name: "Unbreaking",
+            maxLv: 3,
+            mulItem: 2,
+            mulBook: 1,
+            conflicts: [],
+          },
+          {
+            id: "mending",
+            name: "Mending",
+            maxLv: 1,
+            mulItem: 4,
+            mulBook: 2,
+            conflicts: [],
+          },
+          {
+            id: "curse_binding",
+            name: "Curse of Binding",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+          {
+            id: "curse_vanishing",
+            name: "Curse of Vanishing",
+            maxLv: 1,
+            mulItem: 8,
+            mulBook: 4,
+            conflicts: [],
+          },
+        ],
+      };
+
+      // ExcellentEnchants data: weight -> multiplier mapping
+      // weight 1 -> mulBook 8 (very rare), weight 2 -> 4, weight 5 -> 2, weight 10 -> 1
+      const EE_ENCHANTMENTS = {
+        sword: [
+          {
+            id: "ee_bane_netherspawn",
+            name: "Bane of Netherspawn",
+            maxLv: 5,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_blindness",
+            name: "Blindness",
+            maxLv: 2,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_confusion",
+            name: "Confusion",
+            maxLv: 2,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_cure",
+            name: "Cure",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_curse_death",
+            name: "Curse of Death",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_cutter",
+            name: "Cutter",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_decapitator",
+            name: "Decapitator",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_double_strike",
+            name: "Double Strike",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_exhaust",
+            name: "Exhaust",
+            maxLv: 4,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_ice_aspect",
+            name: "Ice Aspect",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_nimble",
+            name: "Nimble",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_paralyze",
+            name: "Paralyze",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_rage",
+            name: "Rage",
+            maxLv: 2,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_rocket",
+            name: "Rocket",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_swiper",
+            name: "Swiper",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_temper",
+            name: "Temper",
+            maxLv: 5,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_thrifty",
+            name: "Thrifty",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_thunder",
+            name: "Thunder",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_vampire",
+            name: "Vampire",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_venom",
+            name: "Venom",
+            maxLv: 2,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_village_defender",
+            name: "Village Defender",
+            maxLv: 5,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_wisdom",
+            name: "Wisdom",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_wither",
+            name: "Wither",
+            maxLv: 2,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+        ],
+        axe: [
+          {
+            id: "ee_bane_netherspawn",
+            name: "Bane of Netherspawn",
+            maxLv: 5,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_blindness",
+            name: "Blindness",
+            maxLv: 2,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_confusion",
+            name: "Confusion",
+            maxLv: 2,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_cure",
+            name: "Cure",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_curse_death",
+            name: "Curse of Death",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_cutter",
+            name: "Cutter",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_decapitator",
+            name: "Decapitator",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_double_strike",
+            name: "Double Strike",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_exhaust",
+            name: "Exhaust",
+            maxLv: 4,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_ice_aspect",
+            name: "Ice Aspect",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_nimble",
+            name: "Nimble",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_paralyze",
+            name: "Paralyze",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_rage",
+            name: "Rage",
+            maxLv: 2,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_rocket",
+            name: "Rocket",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_swiper",
+            name: "Swiper",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_temper",
+            name: "Temper",
+            maxLv: 5,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_thrifty",
+            name: "Thrifty",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_thunder",
+            name: "Thunder",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_vampire",
+            name: "Vampire",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_venom",
+            name: "Venom",
+            maxLv: 2,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_village_defender",
+            name: "Village Defender",
+            maxLv: 5,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_wisdom",
+            name: "Wisdom",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_wither",
+            name: "Wither",
+            maxLv: 2,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_treefeller",
+            name: "Treefeller",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        pickaxe: [
+          {
+            id: "ee_blast_mining",
+            name: "Blast Mining",
+            maxLv: 5,
+            mulBook: 4,
+            conflicts: ["ee_tunnel", "ee_veinminer"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_glass_breaker",
+            name: "Glass Breaker",
+            maxLv: 1,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_haste",
+            name: "Haste",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_lucky_miner",
+            name: "Lucky Miner",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_silk_spawner",
+            name: "Silk Spawner",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: ["ee_smelter"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_smelter",
+            name: "Smelter",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: ["silk_touch", "ee_silk_spawner"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_telekinesis",
+            name: "Telekinesis",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_tunnel",
+            name: "Tunnel",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_blast_mining", "ee_veinminer"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_veinminer",
+            name: "Veinminer",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_blast_mining", "ee_tunnel"],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        shovel: [
+          {
+            id: "ee_glass_breaker",
+            name: "Glass Breaker",
+            maxLv: 1,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_haste",
+            name: "Haste",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_smelter",
+            name: "Smelter",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: ["silk_touch"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_telekinesis",
+            name: "Telekinesis",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_tunnel",
+            name: "Tunnel",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_veinminer", "ee_blast_mining"],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        hoe: [
+          {
+            id: "ee_glass_breaker",
+            name: "Glass Breaker",
+            maxLv: 1,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_haste",
+            name: "Haste",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_replanter",
+            name: "Replanter",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_silk_chest",
+            name: "Silk Chest",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_smelter",
+            name: "Smelter",
+            maxLv: 5,
+            mulBook: 2,
+            conflicts: ["silk_touch"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_telekinesis",
+            name: "Telekinesis",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        helmet: [
+          {
+            id: "ee_darkness_cloak",
+            name: "Darkness Cloak",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_elemental_protection",
+            name: "Elemental Protection",
+            maxLv: 4,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_night_vision",
+            name: "Night Vision",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_saturation",
+            name: "Saturation",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_water_breathing",
+            name: "Water Breathing",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        chestplate: [
+          {
+            id: "ee_cold_steel",
+            name: "Cold Steel",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_darkness_cloak",
+            name: "Darkness Cloak",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_dragon_heart",
+            name: "Dragon Heart",
+            maxLv: 5,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_fire_shield",
+            name: "Fire Shield",
+            maxLv: 4,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_hardened",
+            name: "Hardened",
+            maxLv: 2,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_ice_shield",
+            name: "Ice Shield",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_kamikadze",
+            name: "Kamikadze",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_regrowth",
+            name: "Regrowth",
+            maxLv: 4,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        leggings: [
+          {
+            id: "ee_elemental_protection",
+            name: "Elemental Protection",
+            maxLv: 4,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_stopping_force",
+            name: "Stopping Force",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+        ],
+        boots: [
+          {
+            id: "ee_elemental_protection",
+            name: "Elemental Protection",
+            maxLv: 4,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_flame_walker",
+            name: "Flame Walker",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: ["frost_walker"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_jumping",
+            name: "Jumping",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_lightweight",
+            name: "Lightweight",
+            maxLv: 1,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_rebound",
+            name: "Rebound",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: ["feather_falling"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_speed",
+            name: "Speed",
+            maxLv: 2,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        bow: [
+          {
+            id: "ee_bomber",
+            name: "Bomber",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_confusing_arrows",
+            name: "Confusing Arrows",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_darkness_arrows",
+            name: "Darkness Arrows",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_dragonfire_arrows",
+            name: "Dragonfire Arrows",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_electrified_arrows",
+            name: "Electrified Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_ender_bow",
+            name: "Ender Bow",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: ["ee_bomber", "ee_ghast"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_explosive_arrows",
+            name: "Explosive Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_flare",
+            name: "Flare",
+            maxLv: 1,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_ghast",
+            name: "Ghast",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: ["ee_bomber", "ee_ender_bow"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_hover",
+            name: "Hover",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_lingering",
+            name: "Lingering",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_poisoned_arrows",
+            name: "Poisoned Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_sniper",
+            name: "Sniper",
+            maxLv: 2,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_vampiric_arrows",
+            name: "Vampiric Arrows",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_withered_arrows",
+            name: "Withered Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+        ],
+        crossbow: [
+          {
+            id: "ee_bomber",
+            name: "Bomber",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_confusing_arrows",
+            name: "Confusing Arrows",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_darkness_arrows",
+            name: "Darkness Arrows",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_dragonfire_arrows",
+            name: "Dragonfire Arrows",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_electrified_arrows",
+            name: "Electrified Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_explosive_arrows",
+            name: "Explosive Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_poisoned_arrows",
+            name: "Poisoned Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_withered_arrows",
+            name: "Withered Arrows",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["ee_bomber", "ee_ender_bow", "ee_ghast"],
+            ee: true,
+            weight: 5,
+          },
+        ],
+        trident: [
+          {
+            id: "ee_infernus",
+            name: "Infernus",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+        ],
+        fishing_rod: [
+          {
+            id: "ee_auto_reel",
+            name: "Auto Reel",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_curse_drowned",
+            name: "Curse of Drowned",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_double_catch",
+            name: "Double Catch",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_river_master",
+            name: "River Master",
+            maxLv: 5,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_seasoned_angler",
+            name: "Seasoned Angler",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_survivalist",
+            name: "Survivalist",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+        ],
+        universal: [
+          {
+            id: "ee_curse_breaking",
+            name: "Curse of Breaking",
+            maxLv: 3,
+            mulBook: 1,
+            conflicts: ["unbreaking"],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_curse_fragility",
+            name: "Curse of Fragility",
+            maxLv: 1,
+            mulBook: 1,
+            conflicts: [],
+            ee: true,
+            weight: 10,
+          },
+          {
+            id: "ee_curse_mediocrity",
+            name: "Curse of Mediocrity",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: [],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_curse_misfortune",
+            name: "Curse of Misfortune",
+            maxLv: 3,
+            mulBook: 2,
+            conflicts: ["fortune", "looting"],
+            ee: true,
+            weight: 5,
+          },
+          {
+            id: "ee_restore",
+            name: "Restore",
+            maxLv: 3,
+            mulBook: 4,
+            conflicts: [],
+            ee: true,
+            weight: 2,
+          },
+          {
+            id: "ee_soulbound",
+            name: "Soulbound",
+            maxLv: 1,
+            mulBook: 4,
+            conflicts: ["curse_vanishing"],
+            ee: true,
+            weight: 2,
+          },
+        ],
+      };
+
+      const ITEM_CATEGORIES = {
+        weapons: { label: "Armas", items: ["sword", "axe", "mace", "trident"] },
+        tools: {
+          label: "Herramientas",
+          items: ["pickaxe", "shovel", "hoe", "shears"],
+        },
+        armor: {
+          label: "Armadura",
+          items: ["helmet", "chestplate", "leggings", "boots", "elytra"],
+        },
+        ranged: { label: "Rango", items: ["bow", "crossbow"] },
+        misc: { label: "Otros", items: ["fishing_rod", "shield"] },
+      };
+
+      const ITEM_ICONS = {
+        sword: "⚔",
+        axe: "🪓",
+        pickaxe: "⛏",
+        shovel: "🪏",
+        hoe: "🌾",
+        helmet: "⛑",
+        chestplate: "🦺",
+        leggings: "👖",
+        boots: "👢",
+        bow: "🏹",
+        crossbow: "🏹",
+        trident: "🔱",
+        mace: "🔨",
+        fishing_rod: "🎣",
+        shield: "🛡",
+        shears: "✂",
+        elytra: "🪽",
+      };
+
+      const ITEM_NAMES = {
+        sword: "Espada",
+        axe: "Hacha",
+        pickaxe: "Pico",
+        shovel: "Pala",
+        hoe: "Azada",
+        helmet: "Casco",
+        chestplate: "Pechera",
+        leggings: "Grebas",
+        boots: "Botas",
+        bow: "Arco",
+        crossbow: "Ballesta",
+        trident: "Tridente",
+        mace: "Maza",
+        fishing_rod: "Caña",
+        shield: "Escudo",
+        shears: "Tijeras",
+        elytra: "Elytra",
+      };
+
+      const PRESETS = {
+        sword: [
+          {
+            name: "Max Sword",
+            enchants: [
+              "sharpness:5",
+              "unbreaking:3",
+              "mending:1",
+              "looting:3",
+              "fire_aspect:2",
+              "sweeping:3",
+            ],
+          },
+          {
+            name: "Smite Sword",
+            enchants: [
+              "smite:5",
+              "unbreaking:3",
+              "mending:1",
+              "looting:3",
+              "fire_aspect:2",
+              "sweeping:3",
+            ],
+          },
+        ],
+        pickaxe: [
+          {
+            name: "Fortune",
+            enchants: [
+              "efficiency:5",
+              "fortune:3",
+              "unbreaking:3",
+              "mending:1",
+            ],
+          },
+          {
+            name: "Silk Touch",
+            enchants: [
+              "efficiency:5",
+              "silk_touch:1",
+              "unbreaking:3",
+              "mending:1",
+            ],
+          },
+        ],
+        axe: [
+          {
+            name: "Max Axe",
+            enchants: [
+              "sharpness:5",
+              "efficiency:5",
+              "unbreaking:3",
+              "mending:1",
+            ],
+          },
+        ],
+        bow: [
+          {
+            name: "Max Bow",
+            enchants: [
+              "power:5",
+              "punch:2",
+              "flame:1",
+              "infinity:1",
+              "unbreaking:3",
+            ],
+          },
+          {
+            name: "Mending Bow",
+            enchants: [
+              "power:5",
+              "punch:2",
+              "flame:1",
+              "mending:1",
+              "unbreaking:3",
+            ],
+          },
+        ],
+        helmet: [
+          {
+            name: "Max Helmet",
+            enchants: [
+              "protection:4",
+              "respiration:3",
+              "aqua_affinity:1",
+              "unbreaking:3",
+              "mending:1",
+              "thorns:3",
+            ],
+          },
+        ],
+        chestplate: [
+          {
+            name: "Max Chest",
+            enchants: ["protection:4", "unbreaking:3", "mending:1", "thorns:3"],
+          },
+        ],
+        leggings: [
+          {
+            name: "Max Leggings",
+            enchants: [
+              "protection:4",
+              "swift_sneak:3",
+              "unbreaking:3",
+              "mending:1",
+              "thorns:3",
+            ],
+          },
+        ],
+        boots: [
+          {
+            name: "Max Boots",
+            enchants: [
+              "protection:4",
+              "feather_falling:4",
+              "depth_strider:3",
+              "unbreaking:3",
+              "mending:1",
+              "thorns:3",
+            ],
+          },
+          {
+            name: "Frost Boots",
+            enchants: [
+              "protection:4",
+              "feather_falling:4",
+              "frost_walker:2",
+              "unbreaking:3",
+              "mending:1",
+            ],
+          },
+        ],
+        trident: [
+          {
+            name: "Loyalty",
+            enchants: ["loyalty:3", "impaling:5", "unbreaking:3", "mending:1"],
+          },
+          {
+            name: "Riptide",
+            enchants: ["riptide:3", "impaling:5", "unbreaking:3", "mending:1"],
+          },
+        ],
+        mace: [
+          {
+            name: "Max Mace",
+            enchants: [
+              "density:5",
+              "wind_burst:3",
+              "unbreaking:3",
+              "mending:1",
+            ],
+          },
+        ],
+      };
+
+      // ═══════════════════════════════════════════════
+      // STATE
+      // ═══════════════════════════════════════════════
+
+      let state = {
+        mode: "vanilla", // 'vanilla' or 'ee'
+        selectedItem: null,
+        selectedCat: "weapons",
+        selectedEnchants: {}, // { enchantId: level }
+      };
+
+      // ═══════════════════════════════════════════════
+      // MERGE ALGORITHM
+      // ═══════════════════════════════════════════════
+
+      function getPriorWorkPenalty(useCount) {
+        return Math.pow(2, useCount) - 1;
+      }
+
+      function getRarityMultiplier(enchantDef) {
+        return enchantDef.mulBook || 1;
+      }
+
+      function computeMergeCost(enchantDefs, levels, fromBook) {
+        let cost = 0;
+        for (const def of enchantDefs) {
+          const mul = fromBook
+            ? def.mulBook || 1
+            : def.mulItem || def.mulBook || 1;
+          cost += mul * def.level;
+        }
+        return cost;
+      }
+
+      function findOptimalMergeOrder(item, enchantSelections) {
+        if (enchantSelections.length === 0)
+          return { steps: [], totalCost: 0, maxCost: 0, finalEnchants: [] };
+
+        const books = enchantSelections.map((sel) => ({
+          id: sel.id,
+          name: sel.name,
+          level: sel.level,
+          maxLv: sel.maxLv,
+          mulBook: sel.mulBook,
+          mulItem: sel.mulItem,
+          useCount: 0,
+          enchants: [
+            {
+              id: sel.id,
+              name: sel.name,
+              level: sel.level,
+              maxLv: sel.maxLv,
+              mulBook: sel.mulBook,
+              mulItem: sel.mulItem,
+            },
+          ],
+        }));
+
+        // Single enchantment: apply directly to item
+        if (books.length === 1) {
+          const book = books[0];
+          const mul = book.mulItem || book.mulBook || 1;
+          const cost = mul * book.level;
+          const finalEnchants = [{ ...book.enchants[0] }];
+          return {
+            steps: [
+              {
+                stepNum: 1,
+                target: { name: item, useCount: 0, enchants: [] },
+                sacrifice: {
+                  name: book.name,
+                  useCount: 0,
+                  enchants: book.enchants,
+                },
+                result: { name: item, useCount: 1, enchants: finalEnchants },
+                priorPenaltyTarget: 0,
+                priorPenaltySacrifice: 0,
+                priorPenaltyTotal: 0,
+                enchantCostBreakdown: [
+                  { name: book.name, level: book.level, cost, type: "new" },
+                ],
+                enchantCostTotal: cost,
+                mergeCost: cost,
+                isFinal: true,
+                overLimit: cost > 39,
+              },
+            ],
+            totalCost: cost,
+            maxCost: cost,
+            finalEnchants,
+            finalUseCount: 1,
+          };
+        }
+
+        // For large sets (>6 enchants), use greedy for performance
+        if (books.length > 6) {
+          return findOptimalMergeGreedy(item, books);
+        }
+
+        // Brute-force: try all possible merge orders, pick cheapest
+        function mergeItems(left, right, targetIsItem) {
+          const mergedEnchants = [...left.enchants];
+          const breakdown = [];
+
+          for (const sEnch of right.enchants) {
+            const existing = mergedEnchants.find((e) => e.id === sEnch.id);
+            if (existing) {
+              if (
+                sEnch.level === existing.level &&
+                sEnch.level < (sEnch.maxLv || 99)
+              ) {
+                const newLv = existing.level + 1;
+                const mul = targetIsItem
+                  ? sEnch.mulItem || sEnch.mulBook || 1
+                  : sEnch.mulBook || 1;
+                const cost = mul * newLv;
+                breakdown.push({
+                  name: sEnch.name,
+                  level: newLv,
+                  cost,
+                  type: "upgrade",
+                });
+                existing.level = newLv;
+              } else if (sEnch.level > existing.level) {
+                const mul = targetIsItem
+                  ? sEnch.mulItem || sEnch.mulBook || 1
+                  : sEnch.mulBook || 1;
+                const cost = mul * sEnch.level;
+                breakdown.push({
+                  name: sEnch.name,
+                  level: sEnch.level,
+                  cost,
+                  type: "upgrade",
+                });
+                existing.level = sEnch.level;
+              }
+            } else {
+              const mul = targetIsItem
+                ? sEnch.mulItem || sEnch.mulBook || 1
+                : sEnch.mulBook || 1;
+              const cost = mul * sEnch.level;
+              breakdown.push({
+                name: sEnch.name,
+                level: sEnch.level,
+                cost,
+                type: "new",
+              });
+              mergedEnchants.push({ ...sEnch });
+            }
+          }
+
+          const enchantCost = breakdown.reduce((s, c) => s + c.cost, 0);
+          const priorPenalty =
+            getPriorWorkPenalty(left.useCount) +
+            getPriorWorkPenalty(right.useCount);
+          const totalCost = priorPenalty + enchantCost;
+          const useCount = Math.max(left.useCount, right.useCount) + 1;
+
+          return {
+            cost: totalCost,
+            mergedEnchants,
+            useCount,
+            breakdown,
+            priorPenalty,
+            enchantCost,
+          };
+        }
+
+        function getSig(booksList) {
+          const e = [];
+          for (const b of booksList) {
+            for (const ench of b.enchants) e.push(ench.id + ":" + ench.level);
+          }
+          return e.sort().join("|");
+        }
+
+        function solve(currItem, remainingBooks, memo) {
+          if (remainingBooks.length === 0) {
+            return { totalCost: 0, item: currItem, choices: [] };
+          }
+
+          const sig =
+            getSig(remainingBooks) +
+            "@" +
+            currItem.enchants
+              .map((e) => e.id + ":" + e.level)
+              .sort()
+              .join("|") +
+            "@" +
+            currItem.useCount;
+          if (memo[sig]) return memo[sig];
+
+          let best = null;
+
+          for (let i = 0; i < remainingBooks.length; i++) {
+            const book = remainingBooks[i];
+            const rest = [];
+            for (let k = 0; k < remainingBooks.length; k++) {
+              if (k !== i) rest.push(remainingBooks[k]);
+            }
+
+            const m = mergeItems(currItem, book, true);
+            const newItem = {
+              enchants: m.mergedEnchants,
+              useCount: m.useCount,
+              name: currItem.name,
+            };
+            const sub = solve(newItem, rest, memo);
+            const totalCost = sub.totalCost + m.cost;
+
+            if (!best || totalCost < best.totalCost) {
+              best = {
+                totalCost,
+                item: sub.item,
+                choices: [
+                  {
+                    type: "item",
+                    target: currItem,
+                    sacrifice: book,
+                    merged: m,
+                  },
+                  ...sub.choices,
+                ],
+              };
+            }
+          }
+
+          for (let i = 0; i < remainingBooks.length; i++) {
+            for (let j = 0; j < remainingBooks.length; j++) {
+              if (i === j) continue;
+              const rest = [];
+              for (let k = 0; k < remainingBooks.length; k++) {
+                if (k !== i && k !== j) rest.push(remainingBooks[k]);
+              }
+              const m = mergeItems(remainingBooks[i], remainingBooks[j], false);
+              const mergedBook = {
+                enchants: m.mergedEnchants,
+                useCount: m.useCount,
+                name: "Combined",
+              };
+              rest.push(mergedBook);
+              const sub = solve(currItem, rest, memo);
+              const totalCost = sub.totalCost + m.cost;
+
+              if (!best || totalCost < best.totalCost) {
+                best = {
+                  totalCost,
+                  item: sub.item,
+                  choices: [
+                    {
+                      type: "book",
+                      left: remainingBooks[i],
+                      right: remainingBooks[j],
+                      merged: m,
+                    },
+                    ...sub.choices,
+                  ],
+                };
+              }
+            }
+          }
+
+          memo[sig] = best;
+          return best;
+        }
+
+        const emptyItem = { enchants: [], useCount: 0, name: item };
+        const result = solve(emptyItem, books, {});
+
+        const steps = result.choices.map((ch, i) => {
+          const isFinal = i === result.choices.length - 1;
+          if (ch.type === "item") {
+            return {
+              stepNum: i + 1,
+              target: {
+                name: ch.target.name,
+                useCount: ch.target.useCount,
+                enchants: ch.target.enchants,
+              },
+              sacrifice: {
+                name: ch.sacrifice.name,
+                useCount: ch.sacrifice.useCount,
+                enchants: ch.sacrifice.enchants,
+              },
+              result: {
+                name: item,
+                useCount: ch.merged.useCount,
+                enchants: ch.merged.mergedEnchants,
+              },
+              priorPenaltyTarget: getPriorWorkPenalty(ch.target.useCount),
+              priorPenaltySacrifice: getPriorWorkPenalty(ch.sacrifice.useCount),
+              priorPenaltyTotal: ch.merged.priorPenalty,
+              enchantCostBreakdown: ch.merged.breakdown,
+              enchantCostTotal: ch.merged.enchantCost,
+              mergeCost: ch.merged.cost,
+              isFinal,
+              overLimit: ch.merged.cost > 39,
+            };
+          } else {
+            return {
+              stepNum: i + 1,
+              target: {
+                name: ch.left.name || "Libro",
+                useCount: ch.left.useCount,
+                enchants: ch.left.enchants,
+              },
+              sacrifice: {
+                name: ch.right.name || "Libro",
+                useCount: ch.right.useCount,
+                enchants: ch.right.enchants,
+              },
+              result: {
+                name: "Libro combinado #" + (i + 1),
+                useCount: ch.merged.useCount,
+                enchants: ch.merged.mergedEnchants,
+              },
+              priorPenaltyTarget: getPriorWorkPenalty(ch.left.useCount),
+              priorPenaltySacrifice: getPriorWorkPenalty(ch.right.useCount),
+              priorPenaltyTotal: ch.merged.priorPenalty,
+              enchantCostBreakdown: ch.merged.breakdown,
+              enchantCostTotal: ch.merged.enchantCost,
+              mergeCost: ch.merged.cost,
+              isFinal,
+              overLimit: ch.merged.cost > 39,
+            };
+          }
+        });
+
+        return {
+          steps,
+          totalCost: result.totalCost,
+          maxCost:
+            steps.length > 0 ? Math.max(...steps.map((s) => s.mergeCost)) : 0,
+          finalEnchants: result.item.enchants,
+          finalUseCount: result.item.useCount,
+        };
+      }
+
+      function findOptimalMergeGreedy(item, books) {
+        let pool = [...books];
+        let steps = [];
+        let stepNum = 0;
+        let totalCost = 0;
+        let maxCost = 0;
+
+        while (pool.length > 1) {
+          pool.sort((a, b) => {
+            if (a.useCount !== b.useCount) return a.useCount - b.useCount;
+            const costA = a.enchants.reduce(
+              (s, e) => s + (e.mulBook || 1) * e.level,
+              0,
+            );
+            const costB = b.enchants.reduce(
+              (s, e) => s + (e.mulBook || 1) * e.level,
+              0,
+            );
+            return costA - costB;
+          });
+
+          const target = pool.shift();
+          const sacrifice = pool.shift();
+
+          const newUseCount = Math.max(target.useCount, sacrifice.useCount) + 1;
+          const priorPenaltyTarget = getPriorWorkPenalty(target.useCount);
+          const priorPenaltySacrifice = getPriorWorkPenalty(sacrifice.useCount);
+          const priorPenaltyTotal = priorPenaltyTarget + priorPenaltySacrifice;
+
+          const mergedEnchants = [...target.enchants];
+          const enchantCostBreakdown = [];
+
+          for (const sEnch of sacrifice.enchants) {
+            const existing = mergedEnchants.find((e) => e.id === sEnch.id);
+            if (existing) {
+              if (
+                sEnch.level === existing.level &&
+                sEnch.level < (sEnch.maxLv || 99)
+              ) {
+                const newLv = existing.level + 1;
+                const cost = (sEnch.mulBook || 1) * newLv;
+                enchantCostBreakdown.push({
+                  name: sEnch.name,
+                  level: newLv,
+                  cost,
+                  type: "upgrade",
+                });
+                existing.level = newLv;
+              } else if (sEnch.level > existing.level) {
+                const cost = (sEnch.mulBook || 1) * sEnch.level;
+                enchantCostBreakdown.push({
+                  name: sEnch.name,
+                  level: sEnch.level,
+                  cost,
+                  type: "upgrade",
+                });
+                existing.level = sEnch.level;
+              }
+            } else {
+              const cost = (sEnch.mulBook || 1) * sEnch.level;
+              enchantCostBreakdown.push({
+                name: sEnch.name,
+                level: sEnch.level,
+                cost,
+                type: "new",
+              });
+              mergedEnchants.push({ ...sEnch });
+            }
+          }
+
+          const enchantCostTotal = enchantCostBreakdown.reduce(
+            (s, c) => s + c.cost,
+            0,
+          );
+          const mergeCost = priorPenaltyTotal + enchantCostTotal;
+
+          totalCost += mergeCost;
+          maxCost = Math.max(maxCost, mergeCost);
+
+          stepNum++;
+          const isFinal = pool.length === 0;
+          steps.push({
+            stepNum,
+            target: {
+              name: target.name,
+              useCount: target.useCount,
+              enchants: target.enchants,
+            },
+            sacrifice: {
+              name: sacrifice.name,
+              useCount: sacrifice.useCount,
+              enchants: sacrifice.enchants,
+            },
+            result: {
+              name: isFinal ? item : `Libro combinado #${stepNum}`,
+              useCount: newUseCount,
+              enchants: mergedEnchants,
+            },
+            priorPenaltyTarget,
+            priorPenaltySacrifice,
+            priorPenaltyTotal,
+            enchantCostBreakdown,
+            enchantCostTotal,
+            mergeCost,
+            isFinal,
+            overLimit: mergeCost > 39,
+          });
+
+          pool.push({
+            name: isFinal ? item : `Libro combinado #${stepNum}`,
+            id: "pool_" + stepNum,
+            useCount: newUseCount,
+            enchants: mergedEnchants,
+          });
+        }
+
+        const finalEnchants = pool.length > 0 ? pool[0].enchants : [];
+        const finalUseCount = pool.length > 0 ? pool[0].useCount : 0;
+
+        return { steps, totalCost, maxCost, finalEnchants, finalUseCount };
+      }
+
+      function findBestMergeOrder(item, enchantSelections) {
+        return findOptimalMergeOrder(item, enchantSelections);
+      }
+
+      // ═══════════════════════════════════════════════
+      // UI FUNCTIONS
+      // ═══════════════════════════════════════════════
+
+      function setMode(mode) {
+        state.mode = mode;
+        document.querySelectorAll(".mode-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.mode === mode);
+        });
+        renderEnchantList();
+        renderPresets();
+        checkConflicts();
+      }
+
+      function selectItem(itemId) {
+        state.selectedItem = itemId;
+        state.selectedEnchants = {};
+        renderItemGrid();
+        renderEnchantList();
+        renderSelectedTags();
+        renderPresets();
+        checkConflicts();
+      }
+
+      function selectCat(catKey) {
+        state.selectedCat = catKey;
+        renderItemGrid();
+      }
+
+      function toggleEnchant(enchantId, maxLv) {
+        if (state.selectedEnchants[enchantId]) {
+          const currentLv = state.selectedEnchants[enchantId];
+          if (currentLv >= maxLv) {
+            delete state.selectedEnchants[enchantId];
+          } else {
+            state.selectedEnchants[enchantId] = currentLv + 1;
+          }
+        } else {
+          state.selectedEnchants[enchantId] = 1;
+        }
+        renderEnchantList();
+        renderSelectedTags();
+        checkConflicts();
+      }
+
+      function setEnchantLevel(enchantId, level, maxLv) {
+        if (level < 1) {
+          delete state.selectedEnchants[enchantId];
+        } else if (level > maxLv) {
+          state.selectedEnchants[enchantId] = maxLv;
+        } else {
+          state.selectedEnchants[enchantId] = level;
+        }
+        renderEnchantList();
+        renderSelectedTags();
+        checkConflicts();
+      }
+
+      function removeEnchant(enchantId) {
+        delete state.selectedEnchants[enchantId];
+        renderEnchantList();
+        renderSelectedTags();
+        checkConflicts();
+      }
+
+      function getAvailableEnchants() {
+        if (!state.selectedItem) return [];
+        let enchants = [...(VANILLA_ENCHANTMENTS[state.selectedItem] || [])];
+        if (state.mode === "ee") {
+          const eeForItem = EE_ENCHANTMENTS[state.selectedItem] || [];
+          const eeUniversal = EE_ENCHANTMENTS.universal || [];
+          enchants = [...enchants, ...eeForItem, ...eeUniversal];
+        }
+        return enchants;
+      }
+
+      function renderItemGrid() {
+        const cat = ITEM_CATEGORIES[state.selectedCat];
+        const grid = document.getElementById("item-grid");
+        grid.innerHTML = cat.items
+          .map(
+            (itemId) => `
+    <button class="item-btn ${state.selectedItem === itemId ? "active" : ""}" onclick="selectItem('${itemId}')">
+      <span class="emoji">${ITEM_ICONS[itemId] || "?"}</span>
+      ${ITEM_NAMES[itemId] || itemId}
+    </button>
+  `,
+          )
+          .join("");
+      }
+
+      function renderCatTabs() {
+        const container = document.getElementById("item-cat-tabs");
+        container.innerHTML = Object.entries(ITEM_CATEGORIES)
+          .map(
+            ([key, cat]) => `
+    <button class="cat-tab ${state.selectedCat === key ? "active" : ""}" onclick="selectCat('${key}')">
+      ${cat.label}
+    </button>
+  `,
+          )
+          .join("");
+      }
+
+      function renderEnchantList() {
+        const enchants = getAvailableEnchants();
+        const search = document
+          .getElementById("enchant-search")
+          .value.toLowerCase();
+        const list = document.getElementById("enchant-list");
+
+        const filtered = enchants.filter(
+          (e) =>
+            e.name.toLowerCase().includes(search) ||
+            e.id.toLowerCase().includes(search),
+        );
+
+        list.innerHTML = filtered
+          .map((e) => {
+            const isSelected = state.selectedEnchants[e.id] !== undefined;
+            const currentLv = state.selectedEnchants[e.id] || 1;
+            const cost = (e.mulBook || 1) * currentLv;
+            const rarityClass =
+              e.mulBook <= 1
+                ? "rarity-common"
+                : e.mulBook <= 2
+                  ? "rarity-uncommon"
+                  : e.mulBook <= 4
+                    ? "rarity-rare"
+                    : "rarity-epic";
+            const rarityLabel =
+              e.mulBook <= 1
+                ? "Común"
+                : e.mulBook <= 2
+                  ? "Poco común"
+                  : e.mulBook <= 4
+                    ? "Raro"
+                    : "Épico";
+
+            return `
+      <div class="enchant-row ${isSelected ? "selected" : ""}" onclick="toggleEnchant('${e.id}', ${e.maxLv})">
+        <div class="enchant-check">${isSelected ? "✓" : ""}</div>
+        <div class="enchant-info">
+          <div class="enchant-name">${e.name}</div>
+          <div class="enchant-meta">
+            <span class="cost">✦${cost}</span>
+            <span class="${rarityClass}">${rarityLabel}</span>
+            <span>Máx: ${toRoman(e.maxLv)}</span>
+          </div>
+        </div>
+        ${e.ee ? '<span class="ee-tag">EE</span>' : ""}
+        ${
+          isSelected
+            ? `
+          <div class="level-selector" onclick="event.stopPropagation()">
+            <button class="level-btn" onclick="setEnchantLevel('${e.id}', ${currentLv - 1}, ${e.maxLv})">−</button>
+            <span class="level-display">${toRoman(currentLv)}</span>
+            <button class="level-btn" onclick="setEnchantLevel('${e.id}', ${currentLv + 1}, ${e.maxLv})">+</button>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+          })
+          .join("");
+
+        if (filtered.length === 0) {
+          list.innerHTML =
+            '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px">No se encontraron encantamientos</div>';
+        }
+      }
+
+      function renderSelectedTags() {
+        const container = document.getElementById("selected-tags");
+        const count = document.getElementById("sel-count");
+        const entries = Object.entries(state.selectedEnchants);
+
+        count.textContent = entries.length;
+
+        if (entries.length === 0) {
+          container.innerHTML =
+            '<span style="font-size:11px;color:var(--text-dim)">Ninguno seleccionado</span>';
+          return;
+        }
+
+        const allEnchants = getAvailableEnchants();
+        container.innerHTML = entries
+          .map(([id, lv]) => {
+            const def = allEnchants.find((e) => e.id === id);
+            const name = def ? def.name : id;
+            return `
+      <span class="selected-tag" onclick="removeEnchant('${id}')">
+        ${name} ${toRoman(lv)}
+        <span class="remove">×</span>
+      </span>
+    `;
+          })
+          .join("");
+      }
+
+      function renderPresets() {
+        const container = document.getElementById("presets");
+        if (!state.selectedItem) {
+          container.innerHTML = "";
+          return;
+        }
+        const presets = PRESETS[state.selectedItem] || [];
+        container.innerHTML = presets
+          .map(
+            (p) => `
+    <button class="preset-btn" onclick="applyPreset(${JSON.stringify(p.enchants).replace(/"/g, "&quot;")})">${p.name}</button>
+  `,
+          )
+          .join("");
+      }
+
+      function applyPreset(enchantStrs) {
+        state.selectedEnchants = {};
+        for (const str of enchantStrs) {
+          const [id, lv] = str.split(":");
+          state.selectedEnchants[id] = parseInt(lv);
+        }
+        renderEnchantList();
+        renderSelectedTags();
+        checkConflicts();
+      }
+
+      function filterEnchants() {
+        renderEnchantList();
+      }
+
+      function checkConflicts() {
+        const notice = document.getElementById("conflicts-notice");
+        const enchants = getAvailableEnchants();
+        const selected = Object.keys(state.selectedEnchants);
+        const conflicts = [];
+
+        for (const id of selected) {
+          const def = enchants.find((e) => e.id === id);
+          if (!def || !def.conflicts) continue;
+          for (const conflictId of def.conflicts) {
+            if (selected.includes(conflictId)) {
+              const conflictDef = enchants.find((e) => e.id === conflictId);
+              if (conflictDef) {
+                conflicts.push(`${def.name} ≠ ${conflictDef.name}`);
+              }
+            }
+          }
+        }
+
+        if (conflicts.length > 0) {
+          notice.textContent =
+            "⚠ Conflictos: " + [...new Set(conflicts)].join(" | ");
+          notice.classList.add("visible");
+        } else {
+          notice.classList.remove("visible");
+        }
+      }
+
+      function toRoman(num) {
+        const map = { 1: "I", 2: "II", 3: "III", 4: "IV", 5: "V" };
+        return map[num] || num;
+      }
+
+      // ═══════════════════════════════════════════════
+      // CALCULATE
+      // ═══════════════════════════════════════════════
+
+      function calculate() {
+        const resultsContent = document.getElementById("results-content");
+        console.log(
+          "calculate called, item:",
+          state.selectedItem,
+          "enchants:",
+          state.selectedEnchants,
+        );
+
+        if (!state.selectedItem) {
+          resultsContent.innerHTML =
+            '<div class="results-placeholder"><div class="big-icon">⚠</div><p style="color:var(--accent-yellow)">Selecciona un objeto primero</p></div>';
+          return;
+        }
+
+        const selections = Object.entries(state.selectedEnchants).map(
+          ([id, lv]) => {
+            const allEnchants = getAvailableEnchants();
+            const def = allEnchants.find((e) => e.id === id);
+            return {
+              id,
+              name: def ? def.name : id,
+              level: lv,
+              maxLv: def ? def.maxLv : lv,
+              mulBook: def ? def.mulBook || 1 : 1,
+              mulItem: def ? def.mulItem || def.mulBook || 1 : 1,
+              ee: def ? def.ee : false,
+            };
+          },
+        );
+
+        if (selections.length === 0) {
+          resultsContent.innerHTML =
+            '<div class="results-placeholder"><div class="big-icon">⚠</div><p style="color:var(--accent-yellow)">Selecciona al menos un encantamiento de la lista</p></div>';
+          return;
+        }
+
+        try {
+          const result = findBestMergeOrder(
+            ITEM_NAMES[state.selectedItem],
+            selections,
+          );
+          renderResults(result, state.selectedItem);
+        } catch (e) {
+          resultsContent.innerHTML =
+            '<div class="results-placeholder"><div class="big-icon">❌</div><p style="color:#ff4444">Error: ' +
+            e.message +
+            "</p></div>";
+          console.error(e);
+        }
+      }
+
+      function renderResults(result, itemId) {
+        const container = document.getElementById("results-content");
+        const { steps, totalCost, maxCost, finalEnchants, finalUseCount } =
+          result;
+
+        let html = "";
+
+        // Stats
+        html += `
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">Costo Total</div>
+        <div class="stat-value ${totalCost > 200 ? "danger" : totalCost > 100 ? "warning" : ""}">${totalCost}</div>
+        <div class="stat-sub">niveles de XP</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Costo Máximo</div>
+        <div class="stat-value ${maxCost > 39 ? "danger" : maxCost > 30 ? "warning" : ""}">${maxCost}</div>
+        <div class="stat-sub">${maxCost > 39 ? '⚠ "Too Expensive!"' : "≤ 39 niveles ✓"}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pasos</div>
+        <div class="stat-value">${steps.length}</div>
+        <div class="stat-sub">operaciones de yunque</div>
+      </div>
+    </div>
+  `;
+
+        // Merge steps
+        html += '<div class="merge-steps">';
+        for (const step of steps) {
+          const cardClass = step.overLimit
+            ? "danger"
+            : step.isFinal
+              ? "final"
+              : "";
+          html += `
+      <div class="step-card ${cardClass}" style="animation-delay: ${step.stepNum * 0.05}s">
+        <div class="step-header">
+          <span class="step-number">PASO ${step.stepNum}</span>
+          <span class="step-cost ${step.overLimit ? "over-limit" : ""}">✦ ${step.mergeCost} niveles</span>
+        </div>
+        <div class="step-content">
+          <div class="step-item target">
+            ${step.target.name}
+            ${step.target.useCount > 0 ? `<br><small style="opacity:0.6">usos: ${step.target.useCount}</small>` : ""}
+          </div>
+          <span class="step-arrow">+</span>
+          <div class="step-item sacrifice">
+            ${step.sacrifice.name}
+            ${step.sacrifice.useCount > 0 ? `<br><small style="opacity:0.6">usos: ${step.sacrifice.useCount}</small>` : ""}
+          </div>
+          <span class="step-arrow">→</span>
+          <div class="step-item result">
+            ${step.result.name}
+            <br><small style="opacity:0.6">usos: ${step.result.useCount}</small>
+          </div>
+        </div>
+        <div class="step-details">
+          <div class="detail-row">
+            <span>Penalización previa (${step.target.useCount}→${step.sacrifice.useCount}):</span>
+            <span class="detail-penalty">+${step.priorPenaltyTarget} + ${step.priorPenaltySacrifice} = ${step.priorPenaltyTotal}</span>
+          </div>
+          ${step.enchantCostBreakdown
+            .map(
+              (ec) => `
+            <div class="detail-row">
+              <span>${ec.type === "new" ? "+" : "↑"} ${ec.name} (nv ${ec.level}):</span>
+              <span class="detail-cost">+${ec.cost}</span>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+        }
+        html += "</div>";
+
+        // Final item preview
+        html += `
+    <div class="final-preview">
+      <h3>OBJETO FINAL: ${ITEM_NAMES[itemId] || itemId}</h3>
+      <div class="final-enchant-list">
+        ${finalEnchants
+          .map(
+            (e) => `
+          <span class="final-enchant-tag ${e.ee ? "ee" : "vanilla"}">
+            ${e.name} ${toRoman(e.level)}
+            ${e.ee ? "<small>(EE)</small>" : ""}
+          </span>
+        `,
+          )
+          .join("")}
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text-dim)">
+        Usos previos del objeto: ${finalUseCount} | Penalización acumulada: ${getPriorWorkPenalty(finalUseCount)}
+      </div>
+    </div>
+  `;
+
+        container.innerHTML = html;
+      }
+
+      // ═══════════════════════════════════════════════
+      // INIT
+      // ═══════════════════════════════════════════════
+
+      function init() {
+        renderCatTabs();
+        renderItemGrid();
+        renderEnchantList();
+        renderSelectedTags();
+        renderPresets();
+        selectItem("sword");
+      }
+
+      init();
+    </script>
+  </body>
+</html>
